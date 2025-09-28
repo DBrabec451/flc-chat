@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>FLC Marketing Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; }
+    .wrap { max-width: 780px; margin: 0 auto; }
+    .messages { border: 1px solid #ddd; border-radius: 8px; padding: 12px; height: 420px; overflow:auto; }
+    .row { margin: 8px 0; }
+    .user { font-weight: 600; }
+    form { display: flex; gap: 8px; margin-top: 10px; }
+    textarea { flex: 1; height: 70px; }
+    button { padding: 10px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>FLC Marketing Bot</h1>
+    <div id="messages" class="messages"></div>
+    <form id="form">
+      <textarea id="input" placeholder="Ask something..."></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messagesEl = document.getElementById('messages');
+    const history = [];
+
+    function add(role, text) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<div class="${role}"><strong>${role === 'user' ? 'You' : 'Bot'}:</strong> ${text}</div>`;
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const content = input.value.trim();
+      if (!content) return;
+      input.value = '';
+      add('user', content);
+      history.push({ role: 'user', content });
+
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history })
+      });
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let assistant = '';
+      let started = false;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(l => l.startsWith('data:'));
+        for (const line of lines) {
+          const payload = line.replace(/^data:\s*/, '');
+          if (payload === '[DONE]') continue;
+          try {
+            const event = JSON.parse(payload);
+            const t = event?.output_text || '';
+            if (t) {
+              if (!started) { add('assistant', ''); started = true; }
+              assistant += t;
+              const last = messagesEl.lastChild;
+              last.innerHTML = `<div class="assistant"><strong>Bot:</strong> ${assistant}</div>`;
+            }
+          } catch {}
+        }
+      }
+      history.push({ role: 'assistant', content: assistant });
+    });
+  </script>
+</body>
+</html>
