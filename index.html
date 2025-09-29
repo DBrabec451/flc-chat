@@ -1,41 +1,10 @@
-<script>
-  const form = document.getElementById('form');
-  const input = document.getElementById('input');
-  const messagesEl = document.getElementById('messages');
-  const history = [];
-
-  function add(role, text) {
-    const row = document.createElement('div');
-    row.className = 'row';
-    row.innerHTML = `<div class="${role}"><strong>${role === 'user' ? 'You' : 'Bot'}:</strong> ${text}</div>`;
-    messagesEl.appendChild(row);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const content = input.value.trim();
-    if (!content) return;
-    input.value = '';
-    add('user', content);
-    history.push({ role: 'user', content });
-
-    try {
-      const resp = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history })
-      });
-      const data = await resp.json();
-      if (data?.error) {
-        add('assistant', `⚠️ Error (${data.status || 'server'}): ${data.body || data.message}`);
-        return;
-      }
-      const text = data?.text || '(no reply)';
-      add('assistant', text);
-      history.push({ role: 'assistant', content: text });
-    } catch (err) {
-      add('assistant', '⚠️ Network error. Please try again.');
-    }
-  });
-</script>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>FLC Chat Test</title>
+  </head>
+  <body>
+    <h1>Hello, Fort Lewis!</h1>
+    <p>If you can see this, static hosting works.</p>
+  </body>
+</html>
