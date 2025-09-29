@@ -1,10 +1,95 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>FLC Chat Test</title>
+    <meta charset="UTF-8" />
+    <title>FLC Chatbot</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f4f4f4;
+      }
+      #chat {
+        width: 100%;
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      #messages {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .msg {
+        margin: 5px 0;
+      }
+      .user {
+        font-weight: bold;
+        color: #2c6ed5;
+      }
+      .bot {
+        font-weight: bold;
+        color: #28a745;
+      }
+      #input {
+        width: 80%;
+        padding: 10px;
+      }
+      #send {
+        padding: 10px;
+      }
+    </style>
   </head>
   <body>
-    <h1>Hello, Fort Lewis!</h1>
-    <p>If you can see this, static hosting works.</p>
+    <div id="chat">
+      <h2>FLC Marketing Chatbot</h2>
+      <div id="messages"></div>
+      <input id="input" type="text" placeholder="Type your message..." />
+      <button id="send">Send</button>
+    </div>
+
+    <script>
+      const messagesDiv = document.getElementById("messages");
+      const input = document.getElementById("input");
+      const sendBtn = document.getElementById("send");
+
+      function addMessage(sender, text) {
+        const msg = document.createElement("div");
+        msg.classList.add("msg");
+        msg.innerHTML = `<span class="${sender}">${sender}:</span> ${text}`;
+        messagesDiv.appendChild(msg);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const text = input.value;
+        if (!text) return;
+        addMessage("user", text);
+        input.value = "";
+
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+          });
+          const data = await res.json();
+          addMessage("bot", data.reply || "Error: no reply from server");
+        } catch (err) {
+          addMessage("bot", "Error: " + err.message);
+        }
+      }
+
+      sendBtn.addEventListener("click", sendMessage);
+      input.addEventListener("keypress", e => {
+        if (e.key === "Enter") sendMessage();
+      });
+    </script>
   </body>
 </html>
