@@ -1,95 +1,96 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>FLC Chatbot</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: #f4f4f4;
-      }
-      #chat {
-        width: 100%;
-        max-width: 600px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      }
-      #messages {
-        height: 300px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin-bottom: 10px;
-      }
-      .msg {
-        margin: 5px 0;
-      }
-      .user {
-        font-weight: bold;
-        color: #2c6ed5;
-      }
-      .bot {
-        font-weight: bold;
-        color: #28a745;
-      }
-      #input {
-        width: 80%;
-        padding: 10px;
-      }
-      #send {
-        padding: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="chat">
-      <h2>FLC Marketing Chatbot</h2>
-      <div id="messages"></div>
-      <input id="input" type="text" placeholder="Type your message..." />
-      <button id="send">Send</button>
-    </div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FLC Marketing Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    #chat {
+      width: 100%;
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      min-height: 300px;
+    }
+    #chat p {
+      margin: 8px 0;
+    }
+    #chat strong {
+      text-transform: lowercase;
+    }
+    #input-area {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    #user-input {
+      width: 70%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #0070f3;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005bb5;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">FLC Marketing Chatbot</h2>
+  <div id="chat"></div>
+  <div id="input-area">
+    <input id="user-input" type="text" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
-    <script>
-      const messagesDiv = document.getElementById("messages");
-      const input = document.getElementById("input");
-      const sendBtn = document.getElementById("send");
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
 
-      function addMessage(sender, text) {
-        const msg = document.createElement("div");
-        msg.classList.add("msg");
-        msg.innerHTML = `<span class="${sender}">${sender}:</span> ${text}`;
-        messagesDiv.appendChild(msg);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
+      const chatBox = document.getElementById("chat");
+      chatBox.innerHTML += `<p><strong>user:</strong> ${message}</p>`;
 
-      async function sendMessage() {
-        const text = input.value;
-        if (!text) return;
-        addMessage("user", text);
-        input.value = "";
+      input.value = "";
 
-        try {
-          const res = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text })
-          });
-          const data = await res.json();
-          addMessage("bot", data.reply || "Error: no reply from server");
-        } catch (err) {
-          addMessage("bot", "Error: " + err.message);
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          chatBox.innerHTML += `<p><strong>bot:</strong> Error: ${data.error}</p>`;
+        } else if (data.choices && data.choices[0]) {
+          chatBox.innerHTML += `<p><strong>bot:</strong> ${data.choices[0].message.content}</p>`;
+        } else {
+          chatBox.innerHTML += `<p><strong>bot:</strong> (No response)</p>`;
         }
+      } catch (err) {
+        chatBox.innerHTML += `<p><strong>bot:</strong> Error: ${err.message}</p>`;
       }
-
-      sendBtn.addEventListener("click", sendMessage);
-      input.addEventListener("keypress", e => {
-        if (e.key === "Enter") sendMessage();
-      });
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
+
