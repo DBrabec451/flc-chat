@@ -5,22 +5,30 @@ export default async function handler(req, res) {
 
   try {
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "No API key set" });
-    }
+    if (!apiKey) return res.status(500).json({ error: "No API key set" });
 
-    const { history } = req.body;
+    // Read raw JSON body safely (Vercel Node function)
+    let raw = "";
+    await new Promise((resolve, reject) => {
+      req.on("data", (c) => (raw += c));
+      req.on("end", resolve);
+      req.on("error", reject);
+    });
+    let payload = {};
+    try { payload = JSON.parse(raw || "{}"); } catch { return res.status(400).json({ error:"Invalid JSON" }); }
 
-    // System instruction: guide the chatbot’s behavior
+    const history = Array.isArray(payload.history) ? payload.history : [];
+
     const systemMessage = {
       role: "system",
       content:
-        "You are an assistant collecting marketing material for Fort Lewis College. " +
-        "Always ask for the user's first name, year in school, major, and a memory from their time at Fort Lewis. " +
-        "Once you have all four pieces of information, write a short casual marketing paragraph about them."
+        "You are an assistant collecting short testimonials for Fort Lewis College. " +
+        "Politely and step-by-step collect four fields: FIRST NAME, YEAR IN SCHOOL, MAJOR, and one FAVORITE MEMORY at Fort Lewis. " +
+        "Ask only one question at a time. When you have all four, output a single upbeat paragraph (3–6 sentences) " +
+        "summarizing the student's experience, suitable for marketing. Then ask if they'd like to revise anything."
     };
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const r = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,20 +36,17 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [systemMessage, ...history], // conversation history + system
+        messages: [systemMessage, ...history],
+        temperature: 0.7
       }),
     });
 
-    const data = await response.json();
+    const data = await r.json();
+    if (data?.error) return res.status(500).json({ error: data.error.message });
 
-    if (data.error) {
-      console.error("OpenAI API error:", data.error);
-      return res.status(500).json({ error: data.error.message });
-    }
-
-    res.status(200).json({ reply: data.choices[0].message.content });
-  } catch (error) {
-    console.error("Server error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    const reply = data?.choices?.[0]?.message?.content || "";
+    return res.status(200).json({ reply });
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
