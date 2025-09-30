@@ -9,41 +9,33 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "No API key set" });
     }
 
-    const { message, history } = req.body;
+    const { history } = req.body;
 
-    // System instructions for the chatbot
-    const systemPrompt = `
-    You are an assistant collecting marketing testimonials for Fort Lewis College.
-    Please guide the user to provide:
-    1. Their first name
-    2. Their year in school
-    3. Their major
-    4. A favorite memory from their time at Fort Lewis.
-    
-    Collect these step by step (one at a time).
-    Once you have all four, respond with a polished paragraph about their experience.
-    Keep it casual, upbeat, and student-friendly.
-    `;
+    // System instruction: guide the chatbot’s behavior
+    const systemMessage = {
+      role: "system",
+      content:
+        "You are an assistant collecting marketing material for Fort Lewis College. " +
+        "Always ask for the user's first name, year in school, major, and a memory from their time at Fort Lewis. " +
+        "Once you have all four pieces of information, write a short casual marketing paragraph about them."
+    };
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...(history || []),
-          { role: "user", content: message },
-        ],
+        messages: [systemMessage, ...history], // conversation history + system
       }),
     });
 
     const data = await response.json();
 
     if (data.error) {
+      console.error("OpenAI API error:", data.error);
       return res.status(500).json({ error: data.error.message });
     }
 
