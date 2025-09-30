@@ -4,36 +4,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = await new Promise((resolve, reject) => {
-      let data = "";
-      req.on("data", chunk => {
-        data += chunk;
-      });
-      req.on("end", () => {
-        resolve(JSON.parse(data || "{}"));
-      });
-      req.on("error", reject);
-    });
+    const apiKey = process.env.OPENAI_API_KEY;
+    console.log("API KEY used (first 8 chars):", apiKey ? apiKey.slice(0, 8) : "MISSING");
 
-    const { message } = body;
-
-    if (!message) {
-      return res.status(400).json({ error: "No message provided" });
+    if (!apiKey) {
+      return res.status(500).json({ error: "No API key set" });
     }
+
+    const { message } = req.body;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: message }]
-      })
+        model: "gpt-4o-mini",   // lightweight model, cheaper/faster
+        messages: [{ role: "user", content: message }],
+      }),
     });
 
     const data = await response.json();
+    console.log("OpenAI response:", data);
 
     if (data.error) {
       return res.status(500).json({ error: data.error.message });
@@ -41,6 +34,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ reply: data.choices[0].message.content });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Server error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
