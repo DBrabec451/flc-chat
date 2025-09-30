@@ -1,60 +1,4 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>FLC Chatbot</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: #f4f4f4;
-      }
-      #chat {
-        width: 100%;
-        max-width: 600px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      }
-      #messages {
-        height: 300px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin-bottom: 10px;
-      }
-      .msg {
-        margin: 5px 0;
-      }
-      .user {
-        font-weight: bold;
-        color: #2c6ed5;
-      }
-      .bot {
-        font-weight: bold;
-        color: #28a745;
-      }
-      #input {
-        width: 80%;
-        padding: 10px;
-      }
-      #send {
-        padding: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="chat"></div>
-      <h2>FLC Marketing Chatbot</h2>
-      <div id="messages"></div>
-      <form>
-        <input id="user-input" type="text" placeholder="Type your message..." />
-        <button type="submit">Send</button>
-        </form>
-    </div>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -63,97 +7,126 @@
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       margin: 0;
-      padding: 20px;
     }
-    #chat {
+
+    .chat-container {
       width: 100%;
       max-width: 600px;
-      margin: auto;
       background: white;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      min-height: 300px;
-    }
-    #chat p {
-      margin: 8px 0;
-    }
-    #chat strong {
-      text-transform: lowercase;
-    }
-    #input-area {
-      margin-top: 20px;
       display: flex;
-      justify-content: center;
-      gap: 10px;
+      flex-direction: column;
     }
-    #user-input {
-      width: 70%;
+
+    h1 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      height: 400px;
+    }
+
+    #chat div {
+      margin: 5px 0;
+    }
+
+    .user { color: blue; }
+    .bot { color: green; }
+
+    form {
+      display: flex;
+    }
+
+    input {
+      flex: 1;
       padding: 10px;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 5px 0 0 5px;
     }
+
     button {
-      padding: 10px 20px;
+      padding: 10px;
       border: none;
-      background: #0070f3;
+      background: #007bff;
       color: white;
-      border-radius: 5px;
+      border-radius: 0 5px 5px 0;
       cursor: pointer;
     }
+
     button:hover {
-      background: #005bb5;
+      background: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;">FLC Marketing Chatbot</h2>
-  <div id="chat"></div>
-  <div id="input-area">
-    <input id="user-input" type="text" placeholder="Type your message..." />
-    <button onclick="sendMessage()">Send</button>
+  <div class="chat-container">
+    <h1>FLC Marketing Chatbot</h1>
+    <div id="chat"></div>
+    <form>
+      <input id="user-input" type="text" placeholder="Type your message..." />
+      <button type="submit">Send</button>
+    </form>
   </div>
-<script>
-  const form = document.querySelector("form");
-  const input = document.querySelector("#user-input");
-  const chatBox = document.querySelector("#chat");
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  <script>
+    const form = document.querySelector("form");
+    const input = document.querySelector("#user-input");
+    const chatBox = document.querySelector("#chat");
 
-    const userMessage = input.value.trim();
-    if (!userMessage) return;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    // Show user message
-    const userDiv = document.createElement("div");
-    userDiv.innerHTML = `<strong>user:</strong> ${userMessage}`;
-    chatBox.appendChild(userDiv);
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
 
-    input.value = "";
+      // Show user message
+      const userDiv = document.createElement("div");
+      userDiv.className = "user";
+      userDiv.innerHTML = `<strong>user:</strong> ${userMessage}`;
+      chatBox.appendChild(userDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
-      });
+      input.value = "";
 
-      const data = await res.json();
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: userMessage }),
+        });
 
-      const botDiv = document.createElement("div");
-      if (data.reply) {
-        botDiv.innerHTML = `<strong>bot:</strong> ${data.reply}`;
-      } else {
-        botDiv.innerHTML = `<strong>bot:</strong> Error: ${data.error || "No reply"}`;
+        const data = await res.json();
+
+        const botDiv = document.createElement("div");
+        botDiv.className = "bot";
+        if (data.reply) {
+          botDiv.innerHTML = `<strong>bot:</strong> ${data.reply}`;
+        } else {
+          botDiv.innerHTML = `<strong>bot:</strong> Error: ${data.error || "No reply"}`;
+        }
+        chatBox.appendChild(botDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        const botDiv = document.createElement("div");
+        botDiv.className = "bot";
+        botDiv.innerHTML = `<strong>bot:</strong> Error: ${err.message}`;
+        chatBox.appendChild(botDiv);
       }
-      chatBox.appendChild(botDiv);
-    } catch (err) {
-      const botDiv = document.createElement("div");
-      botDiv.innerHTML = `<strong>bot:</strong> Error: ${err.message}`;
-      chatBox.appendChild(botDiv);
-    }
-  });
-</script>
+    });
+  </script>
 </body>
 </html>
