@@ -60,10 +60,9 @@
     log.scrollTop = log.scrollHeight;
   }
 
-  // Add the initial bot prompt as soon as the page loads
-  window.addEventListener("load", () => {
-    const firstMsg =
-      "Hi! I'd love to hear about your experience at Fort Lewis College. Could you tell me your first name?";
+  // Add the initial bot prompt immediately on load
+  document.addEventListener("DOMContentLoaded", () => {
+    const firstMsg = "Hi! I'd love to hear about your experience at Fort Lewis College. Could you tell me your first name?";
     add("assistant", firstMsg);
     history.push({ role: "assistant", content: firstMsg });
   });
