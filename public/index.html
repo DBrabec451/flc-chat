@@ -44,21 +44,30 @@
   </div>
 
   <script>
-    const log = document.getElementById("log");
-    const form = document.getElementById("frm");
-    const input = document.getElementById("msg");
-    const statusEl = document.getElementById("status");
-    const history = []; // {role:'user'|'assistant', content:string}[]
+  const log = document.getElementById("log");
+  const form = document.getElementById("frm");
+  const input = document.getElementById("msg");
+  const statusEl = document.getElementById("status");
 
-    function add(role, text) {
-      const div = document.createElement("div");
-      div.className = `m ${role === 'user' ? 'u' : 'a'}`;
-      div.innerHTML = `<b>${role === 'user' ? 'user' : 'bot'}:</b> ${text}`;
-      log.appendChild(div);
-      log.scrollTop = log.scrollHeight;
-    }
+  // Start conversation with a greeting from the bot
+  const history = [
+    { role: "assistant", content: "Hi! Thanks for helping us collect stories for Fort Lewis College. What is your first name?" }
+  ];
 
-    window.addEventListener("error", (e) => { statusEl.textContent = "JS error: " + e.message; });
+  // Show that first bot message immediately
+  function renderInitial() {
+    add("assistant", history[0].content);
+  }
+
+  function add(role, text) {
+    const div = document.createElement("div");
+    div.className = `m ${role === 'user' ? 'u' : 'a'}`;
+    div.innerHTML = `<b>${role === 'user' ? 'user' : 'bot'}:</b> ${text}`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  window.addEventListener("load", renderInitial);
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
