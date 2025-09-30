@@ -48,24 +48,27 @@
   const form = document.getElementById("frm");
   const input = document.getElementById("msg");
 
-  // Start with the bot initiating the conversation
-  const history = [
-    { role: "assistant", content: "Hi! I'd love to hear about your experience at Fort Lewis College. Could you tell me your first name?" }
-  ];
+  // Conversation history
+  const history = [];
 
-  // Render the starting message immediately
-  window.addEventListener("load", () => {
-    add("assistant", history[0].content);
-  });
-
+  // Function to add messages to the chat window
   function add(role, text) {
     const div = document.createElement("div");
-    div.className = `m ${role === 'user' ? 'u' : 'a'}`;
-    div.innerHTML = `<b>${role === 'user' ? 'user' : 'bot'}:</b> ${text}`;
+    div.className = `m ${role === "user" ? "u" : "a"}`;
+    div.innerHTML = `<b>${role === "user" ? "user" : "bot"}:</b> ${text}`;
     log.appendChild(div);
     log.scrollTop = log.scrollHeight;
   }
 
+  // Add the initial bot prompt as soon as the page loads
+  window.addEventListener("load", () => {
+    const firstMsg =
+      "Hi! I'd love to hear about your experience at Fort Lewis College. Could you tell me your first name?";
+    add("assistant", firstMsg);
+    history.push({ role: "assistant", content: firstMsg });
+  });
+
+  // Handle form submissions
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const message = input.value.trim();
@@ -80,7 +83,7 @@
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history })
+        body: JSON.stringify({ history }),
       });
 
       const data = await res.json();
