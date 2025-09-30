@@ -112,71 +112,46 @@
     <input id="user-input" type="text" placeholder="Type your message..." />
     <button onclick="sendMessage()">Send</button>
   </div>
+<script>
+  const form = document.querySelector("form");
+  const input = document.querySelector("#user-input");
+  const chatBox = document.querySelector("#chat");
 
-    <script>
-      const messagesDiv = document.getElementById("messages");
-      const input = document.getElementById("input");
-      const sendBtn = document.getElementById("send");
-  <script>
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (!message) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      function addMessage(sender, text) {
-        const msg = document.createElement("div");
-        msg.classList.add("msg");
-        msg.innerHTML = `<span class="${sender}">${sender}:</span> ${text}`;
-        messagesDiv.appendChild(msg);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
-      const chatBox = document.getElementById("chat");
-      chatBox.innerHTML += `<p><strong>user:</strong> ${message}</p>`;
+    const userMessage = input.value.trim();
+    if (!userMessage) return;
 
-      input.value = "";
+    // Show user message
+    const userDiv = document.createElement("div");
+    userDiv.innerHTML = `<strong>user:</strong> ${userMessage}`;
+    chatBox.appendChild(userDiv);
 
-      async function sendMessage() {
-        const text = input.value;
-        if (!text) return;
-        addMessage("user", text);
-        input.value = "";
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message })
-        });
+    input.value = "";
 
-        try {
-          const res = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text })
-          });
-          const data = await res.json();
-          addMessage("bot", data.reply || "Error: no reply from server");
-        } catch (err) {
-          addMessage("bot", "Error: " + err.message);
-        const data = await res.json();
-
-        if (data.error) {
-          chatBox.innerHTML += `<p><strong>bot:</strong> Error: ${data.error}</p>`;
-        } else if (data.choices && data.choices[0]) {
-          chatBox.innerHTML += `<p><strong>bot:</strong> ${data.choices[0].message.content}</p>`;
-        } else {
-          chatBox.innerHTML += `<p><strong>bot:</strong> (No response)</p>`;
-        }
-      } catch (err) {
-        chatBox.innerHTML += `<p><strong>bot:</strong> Error: ${err.message}</p>`;
-      }
-
-      sendBtn.addEventListener("click", sendMessage);
-      input.addEventListener("keypress", e => {
-        if (e.key === "Enter") sendMessage();
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage }),
       });
-    </script>
-  </body>
+
+      const data = await res.json();
+
+      const botDiv = document.createElement("div");
+      if (data.reply) {
+        botDiv.innerHTML = `<strong>bot:</strong> ${data.reply}`;
+      } else {
+        botDiv.innerHTML = `<strong>bot:</strong> Error: ${data.error || "No reply"}`;
+      }
+      chatBox.appendChild(botDiv);
+    } catch (err) {
+      const botDiv = document.createElement("div");
+      botDiv.innerHTML = `<strong>bot:</strong> Error: ${err.message}`;
+      chatBox.appendChild(botDiv);
     }
-  </script>
+  });
+</script>
 </body>
 </html>
