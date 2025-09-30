@@ -47,17 +47,16 @@
   const log = document.getElementById("log");
   const form = document.getElementById("frm");
   const input = document.getElementById("msg");
-  const statusEl = document.getElementById("status");
 
-  // Start conversation with a greeting from the bot
+  // Start with the bot initiating the conversation
   const history = [
-    { role: "assistant", content: "Hi! Thanks for helping us collect stories for Fort Lewis College. What is your first name?" }
+    { role: "assistant", content: "Hi! I'd love to hear about your experience at Fort Lewis College. Could you tell me your first name?" }
   ];
 
-  // Show that first bot message immediately
-  function renderInitial() {
+  // Render the starting message immediately
+  window.addEventListener("load", () => {
     add("assistant", history[0].content);
-  }
+  });
 
   function add(role, text) {
     const div = document.createElement("div");
@@ -67,41 +66,35 @@
     log.scrollTop = log.scrollHeight;
   }
 
-  window.addEventListener("load", renderInitial);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const content = input.value.trim();
-      if (!content) return;
+    add("user", message);
+    input.value = "";
 
-      input.value = "";
-      add("user", content);
-      history.push({ role: "user", content });
+    history.push({ role: "user", content: message });
 
-      try {
-        document.getElementById("send").disabled = true;
-        statusEl.textContent = "";
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ history })
+      });
 
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ history })
-        });
-
-        const data = await res.json();
-
-        if (data?.reply) {
-          add("assistant", data.reply);
-          history.push({ role: "assistant", content: data.reply });
-        } else {
-          add("assistant", "Error: " + (data?.error || "No response"));
-        }
-      } catch (err) {
-        add("assistant", "Network error: " + err.message);
-      } finally {
-        document.getElementById("send").disabled = false;
+      const data = await res.json();
+      if (data.reply) {
+        history.push({ role: "assistant", content: data.reply });
+        add("assistant", data.reply);
+      } else {
+        add("assistant", "(No response)");
       }
-    });
-  </script>
+    } catch (err) {
+      console.error(err);
+      add("assistant", "(Server error)");
+    }
+  });
+</script>
 </body>
 </html>
