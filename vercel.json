@@ -1,18 +1,11 @@
 {
   "version": 2,
-  "functions": { "api/*.js": { "runtime": "nodejs18.x" } },
+  "builds": [
+    { "src": "public/index.html", "use": "@vercel/static" },
+    { "src": "api/chat.js", "use": "@vercel/node" }
+  ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/", "dest": "/public/index.html" },
     { "src": "/(.*)", "dest": "/public/$1" }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "ALLOWALL" },
-        { "key": "Content-Security-Policy", "value": "frame-ancestors https://*.qualtrics.com https://*.qfreeaccount.com 'self';" }
-      ]
-    }
   ]
 }
