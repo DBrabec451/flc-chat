@@ -11,38 +11,38 @@ export default async function handler(req, res) {
 
     const { name, year, major, memory } = req.body;
 
-    // Construct the prompt
     const prompt = `
-    Write a short, casual marketing-style paragraph based on the following:
-    - Name: ${name}
-    - Year in school: ${year}
-    - Major: ${major}
-    - Memory: ${memory}
+    You are helping a student write a short first-person marketing paragraph about their time at Fort Lewis College.
+    Write the paragraph as if the student is speaking about themselves in first person.
+    Include their name, year in school, major, and the memory they shared.
+    Keep the tone casual and authentic, like a student testimonial.
 
-    Example style: "As a sophomore majoring in biology, Alex loved hiking in the San Juans with classmates. This experience made FLC feel like home."
+    Name: ${name}
+    Year: ${year}
+    Major: ${major}
+    Memory: ${memory}
     `;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-      }),
+        max_tokens: 200
+      })
     });
 
     const data = await response.json();
 
     if (data.error) {
-      console.error("OpenAI API error:", data.error);
       return res.status(500).json({ error: data.error.message });
     }
 
-    const reply = data.choices?.[0]?.message?.content || "No response generated.";
-    res.status(200).json({ reply });
+    res.status(200).json({ reply: data.choices[0].message.content });
 
   } catch (error) {
     console.error("Server error:", error);
