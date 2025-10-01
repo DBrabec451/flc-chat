@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FLC Marketing Chatbot</title>
   <style>
     body {
@@ -10,121 +11,108 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
     }
-
-    .chat-container {
-      width: 100%;
-      max-width: 600px;
-      background: white;
+    #chat {
+      background: #fff;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
+      width: 100%;
+      max-width: 600px;
     }
-
     h1 {
       text-align: center;
-      margin-bottom: 15px;
+      color: #333;
     }
-
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
       border-radius: 5px;
-      margin-bottom: 10px;
-      height: 400px;
-    }
-
-    #chat div {
-      margin: 5px 0;
-    }
-
-    .user { color: blue; }
-    .bot { color: green; }
-
-    form {
-      display: flex;
-    }
-
-    input {
-      flex: 1;
-      padding: 10px;
       border: 1px solid #ccc;
-      border-radius: 5px 0 0 5px;
+      box-sizing: border-box;
     }
-
     button {
+      margin-top: 15px;
       padding: 10px;
+      width: 100%;
       border: none;
-      background: #007bff;
+      border-radius: 5px;
+      background: #007BFF;
       color: white;
-      border-radius: 0 5px 5px 0;
+      font-size: 16px;
       cursor: pointer;
     }
-
     button:hover {
       background: #0056b3;
+    }
+    #response {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      min-height: 80px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <div class="chat-container">
+  <div id="chat">
     <h1>FLC Marketing Chatbot</h1>
-    <div id="chat"></div>
-    <form>
-      <input id="user-input" type="text" placeholder="Type your message..." />
-      <button type="submit">Send</button>
+    <form id="chatForm">
+      <label for="name">Your First Name</label>
+      <input type="text" id="name" required />
+
+      <label for="year">Year in School</label>
+      <input type="text" id="year" required />
+
+      <label for="major">Major</label>
+      <input type="text" id="major" required />
+
+      <label for="memory">Favorite Memory at Fort Lewis</label>
+      <textarea id="memory" rows="4" required></textarea>
+
+      <button type="submit">Generate My Paragraph</button>
     </form>
+    <div id="response">Your personalized paragraph will appear here...</div>
   </div>
 
   <script>
-    const form = document.querySelector("form");
-    const input = document.querySelector("#user-input");
-    const chatBox = document.querySelector("#chat");
-
-    form.addEventListener("submit", async (e) => {
+    document.getElementById("chatForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const userMessage = input.value.trim();
-      if (!userMessage) return;
+      const name = document.getElementById("name").value;
+      const year = document.getElementById("year").value;
+      const major = document.getElementById("major").value;
+      const memory = document.getElementById("memory").value;
 
-      // Show user message
-      const userDiv = document.createElement("div");
-      userDiv.className = "user";
-      userDiv.innerHTML = `<strong>user:</strong> ${userMessage}`;
-      chatBox.appendChild(userDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      input.value = "";
+      const responseBox = document.getElementById("response");
+      responseBox.textContent = "Generating your paragraph...";
 
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMessage }),
+          body: JSON.stringify({ name, year, major, memory })
         });
 
         const data = await res.json();
-
-        const botDiv = document.createElement("div");
-        botDiv.className = "bot";
-        if (data.reply) {
-          botDiv.innerHTML = `<strong>bot:</strong> ${data.reply}`;
+        if (data.error) {
+          responseBox.textContent = "Error: " + data.error;
         } else {
-          botDiv.innerHTML = `<strong>bot:</strong> Error: ${data.error || "No reply"}`;
+          responseBox.textContent = data.reply;
         }
-        chatBox.appendChild(botDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
       } catch (err) {
-        const botDiv = document.createElement("div");
-        botDiv.className = "bot";
-        botDiv.innerHTML = `<strong>bot:</strong> Error: ${err.message}`;
-        chatBox.appendChild(botDiv);
+        console.error(err);
+        responseBox.textContent = "Error: Unable to connect to server.";
       }
     });
   </script>
