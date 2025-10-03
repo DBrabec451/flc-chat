@@ -1,120 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FLC Marketing Chatbot</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    #chat {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 600px;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px;
-      width: 100%;
-      border: none;
-      border-radius: 5px;
-      background: #007BFF;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #response {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f9f9f9;
-      border-radius: 5px;
-      border: 1px solid #ddd;
-      min-height: 80px;
-      white-space: pre-wrap;
-    }
-  </style>
-</head>
-<body>
-  <div id="chat">
-    <h1>FLC Marketing Chatbot</h1>
-    <form id="chatForm">
-      <label for="name">Your First Name</label>
-      <input type="text" id="name" required />
+document.getElementById("chat-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-      <label for="year">Year in School</label>
-      <input type="text" id="year" required />
+  const firstName = document.getElementById("firstName").value.trim();
+  const year = document.getElementById("year").value.trim();
+  const major = document.getElementById("major").value.trim();
+  const memory = document.getElementById("memory").value.trim();
 
-      <label for="major">Major</label>
-      <input type="text" id="major" required />
+  const outputDiv = document.getElementById("output");
+  outputDiv.innerHTML = "⏳ Generating your paragraph...";
 
-      <label for="memory">Favorite Memory at Fort Lewis</label>
-      <textarea id="memory" rows="4" required></textarea>
-
-      <button type="submit">Generate My Paragraph</button>
-    </form>
-    <div id="response">Your personalized paragraph will appear here...</div>
-  </div>
-
-  <script>
-    document.getElementById("chatForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById("name").value;
-      const year = document.getElementById("year").value;
-      const major = document.getElementById("major").value;
-      const memory = document.getElementById("memory").value;
-
-      const responseBox = document.getElementById("response");
-      responseBox.textContent = "Generating your paragraph...";
-
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, year, major, memory })
-        });
-
-        const data = await res.json();
-        if (data.error) {
-          responseBox.textContent = "Error: " + data.error;
-        } else {
-          responseBox.textContent = data.reply;
-        }
-      } catch (err) {
-        console.error(err);
-        responseBox.textContent = "Error: Unable to connect to server.";
-      }
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ firstName, year, major, memory })  // ✅ matches backend
     });
-  </script>
-</body>
-</html>
+
+    const data = await response.json();
+
+    if (response.ok) {
+      outputDiv.innerHTML = `<p>${data.reply}</p>`;
+    } else {
+      outputDiv.innerHTML = `<p style="color:red">Error: ${data.error}</p>`;
+      console.error("Server returned error:", data.details);
+    }
+  } catch (err) {
+    console.error("Fetch failed:", err);
+    outputDiv.innerHTML = `<p style="color:red">Error: Could not connect to server.</p>`;
+  }
+});
