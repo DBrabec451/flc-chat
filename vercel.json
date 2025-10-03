@@ -9,3 +9,14 @@
     { "src": "/(.*)", "dest": "/public/index.html" }
   ]
 }
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "ALLOWALL" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
+}
