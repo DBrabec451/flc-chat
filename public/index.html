@@ -1,33 +1,125 @@
-document.getElementById("chat-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const firstName = document.getElementById("firstName").value.trim();
-  const year = document.getElementById("year").value.trim();
-  const major = document.getElementById("major").value.trim();
-  const memory = document.getElementById("memory").value.trim();
-
-  const outputDiv = document.getElementById("output");
-  outputDiv.innerHTML = "⏳ Generating your paragraph...";
-
-  try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ firstName, year, major, memory })  // ✅ matches backend
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      outputDiv.innerHTML = `<p>${data.reply}</p>`;
-    } else {
-      outputDiv.innerHTML = `<p style="color:red">Error: ${data.error}</p>`;
-      console.error("Server returned error:", data.details);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLC Marketing Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
-  } catch (err) {
-    console.error("Fetch failed:", err);
-    outputDiv.innerHTML = `<p style="color:red">Error: Could not connect to server.</p>`;
-  }
-});
+    .container {
+      background: white;
+      padding: 20px 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 420px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin-top: 5px;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      margin-top: 15px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #output {
+      margin-top: 15px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      background: #f9f9f9;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FLC Marketing Chatbot</h1>
+    <form id="chat-form">
+      <label for="firstName">Your First Name</label>
+      <input type="text" id="firstName" required>
+
+      <label for="year">Year in School</label>
+      <input type="text" id="year" required>
+
+      <label for="major">Major</label>
+      <input type="text" id="major" required>
+
+      <label for="memory">Favorite Memory at Fort Lewis</label>
+      <textarea id="memory" required></textarea>
+
+      <button type="submit">Generate My Paragraph</button>
+    </form>
+    <div id="output"></div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    document.getElementById("chat-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const firstName = document.getElementById("firstName").value.trim();
+      const year = document.getElementById("year").value.trim();
+      const major = document.getElementById("major").value.trim();
+      const memory = document.getElementById("memory").value.trim();
+      const outputDiv = document.getElementById("output");
+
+      outputDiv.innerHTML = "⏳ Generating your paragraph...";
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ firstName, year, major, memory })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          outputDiv.innerHTML = `<p>${data.reply}</p>`;
+        } else {
+          outputDiv.innerHTML = `<p style="color:red">Error: ${data.error || "Unexpected server error"}</p>`;
+          console.error("Server returned error:", data.details || data);
+        }
+      } catch (err) {
+        console.error("Fetch failed:", err);
+        outputDiv.innerHTML = `<p style="color:red">Error: Could not connect to server.</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
